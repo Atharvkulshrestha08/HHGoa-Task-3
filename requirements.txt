@@ -13,6 +13,11 @@ web3>=6.15.0
 eth-account>=0.11.0
 pycryptodome>=3.20.0
 
+# Web Dashboard UI/UX & API Server
+fastapi>=0.110.0
+uvicorn>=0.28.0
+python-multipart>=0.0.9
+
 # CLI & Utilities
 rich>=13.7.0
 python-dotenv>=1.0.1

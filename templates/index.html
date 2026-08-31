@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face ID + Blockchain Verification Studio | HH Goa 2026</title>
+  <meta name="description" content="End-to-end Face ID detection, genuine reverse-image social search, and tamper-evident blockchain verification pipeline.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dark-theme">
+  <!-- Background Glow & Grid Canvas -->
+  <div class="bg-glow-orb orb-1"></div>
+  <div class="bg-glow-orb orb-2"></div>
+  <div class="bg-grid-overlay"></div>
+
+  <!-- Main Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-group">
+        <div class="brand-icon-box">
+          <i class="fa-solid fa-fingerprint"></i>
+          <span class="pulse-ring"></span>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">Face<span class="gradient-text">Verif</span>.chain</h1>
+          <span class="brand-tag">HH Goa 2026 • Task 3 Shortlisting</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="network-badge" id="networkBadge">
+          <span class="status-dot"></span>
+          <span id="networkText">Ethereum Sepolia / Local EVM</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btnViewLedger">
+          <i class="fa-solid fa-cube"></i> Ledger Explorer
+        </button>
+        <a href="/docs" target="_blank" class="btn btn-ghost btn-sm">
+          <i class="fa-solid fa-code"></i> API Docs
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="app-main">
+    
+    <!-- Top System Metrics Banner -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon"><i class="fa-solid fa-id-badge"></i></div>
+        <div class="metric-info">
+          <span class="metric-label">Face Recognition</span>
+          <span class="metric-val" id="metricFace">YuNet + SFace 128-d</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon"><i class="fa-solid fa-globe"></i></div>
+        <div class="metric-info">
+          <span class="metric-label">Reverse Visual Search</span>
+          <span class="metric-val" id="metricSearch">Live Google Lens / Indexer</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="metric-info">
+          <span class="metric-label">Cryptographic Fingerprint</span>
+          <span class="metric-val" id="metricCrypto">Keccak-256 (bytes32)</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon"><i class="fa-brands fa-ethereum"></i></div>
+        <div class="metric-info">
+          <span class="metric-label">Blockchain Status</span>
+          <span class="metric-val" id="metricChain">Tamper-Evident EVM</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3-Pillar Interactive Workflow Grid -->
+    <div class="pipeline-grid">
+      
+      <!-- ============================================== -->
+      <!-- PILLAR 1: BIOMETRIC INGESTION & FACE ID        -->
+      <!-- ============================================== -->
+      <section class="card pipeline-card" id="pillar1">
+        <div class="card-header">
+          <div class="step-badge">01</div>
+          <div class="header-titles">
+            <h2>Face ID & Vector Embedding</h2>
+            <p>Upload photo or select test portrait for 128-d facial landmark encoding</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Preset Sample Pills -->
+          <div class="samples-bar">
+            <span class="samples-title">Presets:</span>
+            <button class="sample-pill active" data-sample="sample_face.jpg">Sample #1 (Portrait)</button>
+            <button class="sample-pill" data-sample="sample_face_2.jpg">Sample #2 (Alternative)</button>
+          </div>
+
+          <!-- Dropzone / Image Preview Area -->
+          <div class="upload-dropzone" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
+            
+            <div class="dropzone-empty" id="dropzoneEmpty">
+              <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+              <p class="dropzone-text">Drag & drop photo here or <span class="highlight">browse</span></p>
+              <span class="dropzone-sub">Supports JPG, PNG, WEBP (Max 15MB)</span>
+              
+              <div class="camera-cta-wrap">
+                <button type="button" class="btn btn-secondary btn-sm" id="btnOpenWebcam">
+                  <i class="fa-solid fa-camera"></i> Use Live Camera
+                </button>
+              </div>
+            </div>
+
+            <div class="dropzone-preview hidden" id="dropzonePreview">
+              <div class="canvas-wrap">
+                <img id="previewImg" src="/assets/sample_face.jpg" alt="Input face" crossorigin="anonymous">
+                <canvas id="faceCanvas"></canvas>
+              </div>
+              <button type="button" class="btn-remove-img" id="btnRemoveImg" title="Clear image">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Face Detection Results Mini Panel -->
+          <div class="sub-panel hidden" id="faceResultsPanel">
+            <div class="face-details-grid">
+              <div class="crop-avatar-box">
+                <img id="cropImg" src="" alt="Cropped face portrait">
+                <span class="crop-label">Face Crop</span>
+              </div>
+              <div class="face-meta-info">
+                <div class="meta-row">
+                  <span class="meta-name">Status:</span>
+                  <span class="meta-val badge-success" id="faceStatusBadge">Detected (92.4%)</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-name">Model:</span>
+                  <span class="meta-val" id="faceModelVal">CASIA YuNet + SFace</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-name">Embedding:</span>
+                  <span class="meta-val font-mono" id="embeddingHashVal">b503...9894</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Network Mode Options -->
+          <div class="options-group">
+            <label class="control-label">Target Blockchain Network</label>
+            <div class="radio-toggle-group">
+              <label class="radio-pill">
+                <input type="radio" name="network" value="sepolia" checked>
+                <span><i class="fa-brands fa-ethereum"></i> Ethereum Sepolia</span>
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="network" value="local">
+                <span><i class="fa-solid fa-server"></i> Local EVM Ledger</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Execute Pipeline CTA -->
+          <button class="btn btn-primary btn-block btn-lg" id="btnRunPipeline">
+            <i class="fa-solid fa-play"></i> Run End-to-End Verification
+          </button>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PILLAR 2: REVERSE SEARCH & FINGERPRINTING      -->
+      <!-- ============================================== -->
+      <section class="card pipeline-card" id="pillar2">
+        <div class="card-header">
+          <div class="step-badge">02</div>
+          <div class="header-titles">
+            <h2>Social Discovery & Cryptography</h2>
+            <p>Live reverse-image search and deterministic Keccak-256 fingerprinting</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          
+          <!-- Search Progress / Radar -->
+          <div class="radar-box hidden" id="searchRadar">
+            <div class="radar-sweep"></div>
+            <div class="radar-dot"></div>
+            <p class="radar-text">Executing live visual search across social media indexers...</p>
+          </div>
+
+          <!-- Primary Discovered Match Card -->
+          <div class="discovered-card hidden" id="discoveredCard">
+            <div class="discovered-header">
+              <span class="platform-tag" id="matchPlatformTag">
+                <i class="fa-brands fa-x-twitter"></i> X (Twitter)
+              </span>
+              <span class="match-rank-badge">Top Match</span>
+            </div>
+            <h3 class="discovered-title" id="matchTitle">Live Web Visual Match</h3>
+            <p class="discovered-snippet" id="matchSnippet">Identified reverse-image visual fingerprint across public social media indexing nodes.</p>
+            <a href="#" target="_blank" class="discovered-link" id="matchUrl">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> <span id="matchUrlText">https://x.com/...</span>
+            </a>
+          </div>
+
+          <!-- Cryptographic Fingerprint Box -->
+          <div class="crypto-box hidden" id="cryptoBox">
+            <div class="crypto-header">
+              <span class="crypto-title"><i class="fa-solid fa-key"></i> Tamper-Evident Fingerprint</span>
+              <span class="crypto-sub">Deterministic Keccak-256</span>
+            </div>
+
+            <div class="hash-field">
+              <label>Ethereum Keccak-256 (bytes32):</label>
+              <div class="hash-display">
+                <code id="keccakHash">0x2068...009d</code>
+                <button class="btn-copy" data-target="keccakHash" title="Copy to clipboard">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="hash-field">
+              <label>SHA-256 Digest:</label>
+              <div class="hash-display">
+                <code id="sha256Hash">0a1a...20b</code>
+                <button class="btn-copy" data-target="sha256Hash" title="Copy to clipboard">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- View Payload Toggle -->
+            <details class="payload-details">
+              <summary>View Canonical Fingerprint Payload</summary>
+              <pre><code id="payloadJson" class="font-mono">{}</code></pre>
+            </details>
+          </div>
+
+          <div class="pillar-placeholder" id="pillar2Placeholder">
+            <i class="fa-solid fa-magnifying-glass-arrow-right"></i>
+            <p>Run the pipeline to initiate live reverse-image discovery and generate cryptographic notarization digests.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PILLAR 3: BLOCKCHAIN NOTARIZATION & AUDIT      -->
+      <!-- ============================================== -->
+      <section class="card pipeline-card" id="pillar3">
+        <div class="card-header">
+          <div class="step-badge">03</div>
+          <div class="header-titles">
+            <h2>Blockchain Proof & Audit Lab</h2>
+            <p>Immutable on-chain storage, re-verification, and tamper simulation</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          
+          <!-- Big Holographic Verification Status Badge -->
+          <div class="verif-badge-card hidden" id="verifBadgeCard">
+            <div class="verif-icon-circle">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="verif-text-group">
+              <h3 id="verifBadgeTitle">100% VERIFIED ON-CHAIN</h3>
+              <p id="verifBadgeSub">Cryptographic match confirmed against blockchain ledger</p>
+            </div>
+          </div>
+
+          <!-- Blockchain Receipt Details -->
+          <div class="blockchain-details-card hidden" id="blockchainDetailsCard">
+            <div class="receipt-row">
+              <span class="r-label">Network:</span>
+              <span class="r-val" id="bcNetworkVal">Ethereum Sepolia</span>
+            </div>
+            <div class="receipt-row">
+              <span class="r-label">Block Number:</span>
+              <span class="r-val font-mono" id="bcBlockVal">#1</span>
+            </div>
+            <div class="receipt-row">
+              <span class="r-label">Transaction Hash:</span>
+              <div class="r-val-hash">
+                <span class="font-mono" id="bcTxHashVal">0xdf19...07c</span>
+                <button class="btn-copy" data-target="bcTxHashVal"><i class="fa-regular fa-copy"></i></button>
+              </div>
+            </div>
+            <div class="receipt-row" id="explorerRow">
+              <span class="r-label">Block Explorer:</span>
+              <a href="#" target="_blank" class="explorer-link" id="bcExplorerLink">
+                View on Etherscan <i class="fa-solid fa-external-link"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Interactive Tamper Testing Sandbox -->
+          <div class="tamper-lab hidden" id="tamperLab">
+            <div class="tamper-lab-header">
+              <h4><i class="fa-solid fa-flask-vial"></i> Tamper-Evidence Simulator</h4>
+              <span class="tamper-hint">Test on-chain rejection by modifying 1 byte</span>
+            </div>
+            <div class="tamper-controls">
+              <input type="text" id="tamperInput" class="tamper-text-input font-mono" value="" spellcheck="false">
+              <div class="tamper-btn-row">
+                <button class="btn btn-danger btn-sm" id="btnTamperHash">
+                  <i class="fa-solid fa-bug"></i> Tamper 1 Byte
+                </button>
+                <button class="btn btn-secondary btn-sm" id="btnRestoreHash">
+                  <i class="fa-solid fa-rotate-left"></i> Restore Authentic
+                </button>
+                <button class="btn btn-primary btn-sm" id="btnRunReverify">
+                  <i class="fa-solid fa-arrows-rotate"></i> Re-Verify On-Chain
+                </button>
+              </div>
+            </div>
+            <div class="tamper-result-msg hidden" id="tamperResultMsg"></div>
+          </div>
+
+          <!-- Report Download Row -->
+          <div class="download-bar hidden" id="downloadBar">
+            <a href="/api/download/report" class="btn btn-secondary btn-sm" id="btnDownloadJson">
+              <i class="fa-solid fa-file-code"></i> JSON Audit Report
+            </a>
+            <a href="/api/download/receipt" class="btn btn-secondary btn-sm" id="btnDownloadReceipt">
+              <i class="fa-solid fa-file-lines"></i> Markdown Receipt
+            </a>
+          </div>
+
+          <div class="pillar-placeholder" id="pillar3Placeholder">
+            <i class="fa-solid fa-cubes-stacked"></i>
+            <p>Upload a face to inspect the blockchain receipt, verify on-chain integrity, or simulate tamper testing.</p>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- ON-CHAIN LEDGER AUDIT EXPLORER MODAL / TABLE   -->
+    <!-- ============================================== -->
+    <section class="card ledger-card" id="ledgerSection">
+      <div class="card-header">
+        <div class="header-titles">
+          <h2><i class="fa-solid fa-cube"></i> Immutable Blockchain Audit Ledger</h2>
+          <p>Historical records notarized on the cryptographic ledger</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btnRefreshLedger">
+          <i class="fa-solid fa-rotate"></i> Refresh Ledger
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th>Block #</th>
+                <th>Tx Hash</th>
+                <th>Fingerprint Digest</th>
+                <th>Discovered Post URL</th>
+                <th>Timestamp (UTC)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody">
+              <tr>
+                <td colspan="6" class="text-center text-muted">Loading blockchain records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Live Webcam Capture Modal -->
+  <div class="modal-overlay hidden" id="webcamModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-camera"></i> Live Camera Biometric Ingestion</h3>
+        <button class="btn-close-modal" id="btnCloseWebcam"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="webcam-view">
+          <video id="webcamVideo" autoplay playsinline></video>
+          <div class="face-target-reticle"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelWebcam">Cancel</button>
+        <button class="btn btn-primary" id="btnCapturePhoto">
+          <i class="fa-solid fa-camera"></i> Capture & Analyze
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

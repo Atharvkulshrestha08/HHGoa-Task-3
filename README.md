@@ -1,11 +1,25 @@
-# 🛡️ Face ID & Blockchain Verification Pipeline
+# 🛡️ Face ID & Blockchain Verification Studio
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Modern_UI_UX-009688.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Web3: Sepolia / Local EVM](https://img.shields.io/badge/Blockchain-Ethereum_Sepolia_/_Local_EVM-627EEA.svg)](https://sepolia.etherscan.io/)
 [![Computer Vision](https://img.shields.io/badge/OpenCV-YuNet_+_SFace_128--d-red.svg)](https://opencv.org/)
 
-An end-to-end verification pipeline built for **HH Goa 2026 Shortlisting (Task #3)** that detects and encodes a human face from an input image, executes a genuine reverse-image search to identify matching social media / web posts, creates a tamper-evident cryptographic fingerprint, uploads it to an immutable blockchain ledger, and re-verifies the on-chain record.
+An end-to-end verification pipeline and interactive Web UI/UX Studio built for **HH Goa 2026 Shortlisting (Task #3)**. It detects and encodes a human face from an input image, executes a genuine reverse-image search to identify matching social media posts, computes a tamper-evident cryptographic fingerprint, uploads it to an immutable blockchain ledger (Ethereum Sepolia / Local EVM), and demonstrates on-chain re-verification.
+
+---
+
+## 🖥️ Interactive Web UI / UX Dashboard
+
+The system features a **cybersecurity-themed dark mode Web UI Dashboard** (`http://127.0.0.1:8000`):
+
+- **Biometric Ingestion Studio**: Drag & drop photo zone, preset sample selectors, live HTML5 bounding box & landmark rendering, and live camera snapshot support.
+- **Social Discovery Radar**: Live reverse-search animation displaying verified social media cards (X/Twitter, LinkedIn, Reddit, Instagram, etc.) with clickable links.
+- **Cryptographic Notary**: Displays canonical JSON payload, Ethereum Keccak-256 (`bytes32`), and SHA-256 digests with one-click copy buttons.
+- **On-Chain Audit & Verification Badge**: Holographic verification status card, transaction hash, block height, and Sepolia block explorer link.
+- **Interactive Tamper-Evidence Lab**: Allows testers to alter 1 byte of the cryptographic hash to watch the blockchain verification fail with tamper detection, and restore it to confirm 100% authenticity.
+- **Immutable Ledger Explorer**: Live table of all mined blocks and notarized records with instant re-verification triggers.
 
 ---
 
@@ -48,7 +62,7 @@ An end-to-end verification pipeline built for **HH Goa 2026 Shortlisting (Task #
                                          │
                                          ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│ 5. ON-CHAIN RE-VERIFICATION & AUDIT RECEIPT (main.py)                           │
+│ 5. ON-CHAIN RE-VERIFICATION & AUDIT RECEIPT (main.py / app.py)                  │
 │    • Query blockchain state using the computed fingerprint                      │
 │    • Confirm 100% byte-for-byte cryptographic integrity                        │
 │    • Export JSON report & Markdown verification receipt                         │
@@ -57,40 +71,20 @@ An end-to-end verification pipeline built for **HH Goa 2026 Shortlisting (Task #
 
 ---
 
-## 🌟 Key Features
-
-1. **Robust Face Detection & 128-d Feature Embedding**:
-   - Uses CASIA YuNet deep convolutional detector for landmark localization and OpenCV SFace for generating 128-dimensional facial representation embeddings.
-   - Computes deterministic SHA-256 hash of the facial vector and exports normalized face crops.
-
-2. **Genuine Live Reverse-Image Search**:
-   - Connects to SerpAPI (Google Lens API engine) and visual search indexers.
-   - Extracts real matching social media posts across **X (Twitter), LinkedIn, Instagram, Reddit, Facebook, Threads, YouTube, and GitHub**.
-   - No hardcoded / pre-picked results.
-
-3. **Tamper-Evident Fingerprint**:
-   - Formulates a canonical payload binding the image's raw SHA-256, the 128-d embedding hash, the discovered social URL, title, and timestamp.
-   - Generates a 32-byte Ethereum **Keccak-256** hash (`0x...`).
-
-4. **Multi-Mode Blockchain Notarization**:
-   - **Ethereum Sepolia Testnet**: Writes directly to the `FaceVerificationRegistry.sol` smart contract or broadcasts verifiable EVM calldata transactions.
-   - **Local EVM Cryptographic Ledger**: Zero-configuration, offline-compatible Merkle ledger with mining, block hashing, and instant verification.
-
-5. **Complete On-Chain Re-Verification**:
-   - Reads the transaction/storage state from the blockchain.
-   - Re-computes and compares the cryptographic fingerprint to prove immutability and tamper resistance.
-
----
-
 ## 📂 Repository Structure
 
 ```
 face-blockchain-pipeline/
-├── README.md                      # Complete system documentation
-├── requirements.txt               # Python dependencies
+├── app.py                         # FastAPI Web Application Server
+├── main.py                        # CLI & Web Launcher Orchestrator
+├── requirements.txt               # Dependencies
 ├── .env.example                   # Environment configuration template
 ├── .gitignore                     # Git exclusions
-├── main.py                        # CLI Orchestrator with Rich UI
+├── templates/
+│   └── index.html                 # Interactive UI/UX Dashboard
+├── static/
+│   ├── css/style.css              # Cyber-security dark theme stylesheet
+│   └── js/app.js                  # Interactive frontend logic & canvas visualizer
 ├── src/
 │   ├── __init__.py                # Package init
 │   ├── face.py                    # Face detection, 128-d embedding & cropping
@@ -117,56 +111,38 @@ face-blockchain-pipeline/
 ## 🚀 Quick Start & Installation
 
 ### 1. Prerequisites
-- **Python 3.10+** (Python 3.10, 3.11, 3.12, or 3.13)
-- Git
+- **Python 3.10+** (tested on Python 3.10, 3.11, 3.12, 3.13)
+- Modern Web Browser (Chrome, Brave, Firefox, Edge, Safari)
 
-### 2. Clone the Repository
-```bash
-git clone https://github.com/<your-username>/face-blockchain-pipeline.git
-cd face-blockchain-pipeline
-```
-
-### 3. Install Dependencies
+### 2. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables (Optional for Testnet)
-Copy `.env.example` to `.env`:
+### 3. Launch the Interactive Web UI Dashboard
 ```bash
-cp .env.example .env
+python app.py
+# or
+python main.py --web
 ```
-Edit `.env` if you want to use a live SerpAPI key or Ethereum Sepolia credentials:
-```env
-SERPAPI_API_KEY=your_serpapi_api_key_here
-WEB3_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-PRIVATE_KEY=your_testnet_private_key
-CONTRACT_ADDRESS=
-BLOCKCHAIN_NETWORK=sepolia
-```
-*(Note: If no API key or private key is provided, the pipeline seamlessly uses live visual indexers and the local EVM ledger for zero-friction demonstration).*
+👉 Open your browser at: **`http://127.0.0.1:8000`**
 
 ---
 
-## 💻 Running the Pipeline
+## 💻 CLI Usage (Alternative)
 
-### Basic Run (Sample Face Image)
+### Run Pipeline via Terminal CLI
 ```bash
+# Basic run with sample portrait
 python main.py --image assets/sample_face.jpg
-```
 
-### Run with a Custom Image
-```bash
+# Run with any custom photo
 python main.py --image path/to/your_photo.jpg
-```
 
-### Run on Local EVM Ledger explicitly
-```bash
+# Run specifically on local EVM ledger
 python main.py --image assets/sample_face.jpg --local-chain
-```
 
-### Run on Ethereum Sepolia Testnet
-```bash
+# Run on Ethereum Sepolia Testnet
 python main.py --image assets/sample_face.jpg --network sepolia
 ```
 
@@ -174,7 +150,7 @@ python main.py --image assets/sample_face.jpg --network sepolia
 
 ## 🧪 Running Automated Tests
 
-Run the complete test suite to verify face detection, 128-d embedding extraction, cryptographic hashing, and blockchain notarization:
+Run the complete test suite:
 ```bash
 python -m pytest -v
 ```
@@ -183,12 +159,12 @@ python -m pytest -v
 
 ## ⛓️ Which Blockchain is Used?
 
-The pipeline supports **Ethereum Sepolia Testnet** and **Local EVM Cryptographic Ledger**:
+The system supports dual blockchain environments:
 
 1. **Ethereum Sepolia Testnet (EVM)**:
-   - Uses `web3.py` to interact with Ethereum testnet nodes (via Infura, Alchemy, or public RPC endpoints).
+   - Uses `web3.py` to interact with Ethereum testnet nodes.
    - Writes records to the `FaceVerificationRegistry.sol` contract (`registerRecord(bytes32, string, string)`), emitting immutable on-chain events and storing records in a `mapping(bytes32 => FaceRecord)`.
-   - Explorer links (e.g. `https://sepolia.etherscan.io/tx/0x...`) allow independent third-party verification.
+   - Explorer links (e.g. `https://sepolia.etherscan.io/tx/0x...`) allow third-party verification.
 
 2. **Local EVM-Compatible Cryptographic Ledger**:
    - An immutable, file-persisted blockchain ledger (`output/blockchain_ledger.json`) that computes Merkle roots, previous block hashes, and Keccak-256 transaction IDs.
@@ -196,78 +172,33 @@ The pipeline supports **Ethereum Sepolia Testnet** and **Local EVM Cryptographic
 
 ---
 
-## 📋 Smart Contract Details
-
-The Solidity contract (`contracts/FaceVerificationRegistry.sol`) provides:
-- `registerRecord(bytes32 _fingerprint, string _postUrl, string _metadataUri)`: Stores the unique fingerprint along with caller address and block timestamp.
-- `verifyRecord(bytes32 _fingerprint)`: Constant view function returning whether the record exists, its associated URL, metadata URI, timestamp, and recorder address.
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-
-contract FaceVerificationRegistry {
-    struct FaceRecord {
-        bytes32 fingerprint;
-        string postUrl;
-        string metadataUri;
-        uint256 timestamp;
-        address registeredBy;
-        bool exists;
-    }
-
-    mapping(bytes32 => FaceRecord) public records;
-    bytes32[] public allFingerprints;
-
-    event RecordRegistered(bytes32 indexed fingerprint, address indexed registeredBy, string postUrl, uint256 timestamp);
-
-    function registerRecord(bytes32 _fingerprint, string calldata _postUrl, string calldata _metadataUri) external {
-        require(!records[_fingerprint].exists, "Record already exists on-chain");
-        records[_fingerprint] = FaceRecord(_fingerprint, _postUrl, _metadataUri, block.timestamp, msg.sender, true);
-        allFingerprints.push(_fingerprint);
-        emit RecordRegistered(_fingerprint, msg.sender, _postUrl, block.timestamp);
-    }
-
-    function verifyRecord(bytes32 _fingerprint) external view returns (bool exists, string memory postUrl, string memory metadataUri, uint256 timestamp, address registeredBy) {
-        FaceRecord memory rec = records[_fingerprint];
-        return (rec.exists, rec.postUrl, rec.metadataUri, rec.timestamp, rec.registeredBy);
-    }
-}
-```
-
----
-
 ## ⚠️ Known Limitations & Considerations
 
-1. **Face Recognition Accuracy & Variations**:
+1. **Face Recognition Accuracy**:
    - Facial embedding distances vary with extreme head poses, heavy occlusions, low illumination, and strong filters.
 2. **Reverse Image Search API Rate Limits**:
    - Commercial reverse-image APIs (e.g. SerpAPI Google Lens) enforce monthly query quotas. The pipeline handles rate limits gracefully with fallback web indexing.
 3. **Dynamic Social Media URLs**:
    - Social media platforms frequently update or remove content. The cryptographic hash preserves the exact URL and title at the moment of notarization.
-4. **Testnet Longevity**:
-   - Testnet state can be pruned during Ethereum hard forks; production deployments would target Ethereum Mainnet, Base, Arbitrum, or Polygon.
-5. **Privacy & Biometric Data Handling**:
+4. **Privacy & Biometric Data Handling**:
    - **Zero Raw Biometrics On-Chain**: Raw facial images and high-dimensional biometric vectors are **NEVER** stored directly on the public blockchain. Only one-way cryptographic digests (SHA-256 and Keccak-256) and public URLs are notarized, ensuring full privacy preservation and compliance with data protection principles.
 
 ---
 
 ## 🎥 Screen Recording Instructions
 
-For the submission requirement:
-1. Open a terminal in the project root.
-2. Start your screen recording software (e.g. OBS Studio, Loom, QuickTime, or Windows Game Bar `Win + G`).
-3. Run the pipeline:
-   ```bash
-   python main.py --image assets/sample_face.jpg
-   ```
-4. Allow the terminal to display all 5 steps:
-   - 👤 Step 1: Face Detection & 128-d Feature Embedding
-   - 🌐 Step 2: Live Reverse Image Search & Discovered Post
-   - 🔐 Step 3: Cryptographic Keccak-256 Fingerprint Generation
-   - ⛓️ Step 4: Blockchain Upload & Transaction Hash
-   - 🛡️ Step 5: On-Chain Re-Verification Confirmation
-5. Stop the recording, upload to YouTube (unlisted), Google Drive, or Loom, and submit the link along with the GitHub repository.
+For your submission:
+1. Start the web dashboard: `python app.py` and open `http://127.0.0.1:8000`.
+2. Start your screen recording software (OBS Studio, Loom, QuickTime, or `Win + G`).
+3. Click **"Run End-to-End Verification"** on the dashboard.
+4. Show:
+   - 👤 Face detection box & 128-d embedding
+   - 🌐 Discovered social media post
+   - 🔐 Keccak-256 cryptographic fingerprint
+   - ⛓️ Blockchain block number & transaction hash
+   - 🛡️ 100% VERIFIED ON-CHAIN badge
+   - 🧪 Click **"Tamper 1 Byte"** -> **"Re-Verify"** (shows tamper rejection) -> click **"Restore Authentic"** -> **"Re-Verify"** (shows match confirmation).
+5. Stop the recording, upload to YouTube (unlisted) or Loom / Google Drive, and submit the link along with the GitHub repository.
 
 ---
 

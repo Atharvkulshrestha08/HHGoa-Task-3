@@ -262,6 +262,11 @@ def main():
         help="Force use of local cryptographic EVM audit ledger",
     )
     parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Launch the interactive Web UI/UX Studio Dashboard (http://localhost:8000)",
+    )
+    parser.add_argument(
         "--output",
         "-o",
         type=str,
@@ -270,6 +275,13 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.web:
+        import uvicorn
+        console.print("[bold cyan]🚀 Launching Face ID & Blockchain Verification Studio UI...[/bold cyan]")
+        console.print("[bold green]👉 Open in your browser: http://127.0.0.1:8000[/bold green]\n")
+        uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=False)
+        return
 
     run_pipeline(
         image_path=args.image,
