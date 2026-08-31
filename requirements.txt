@@ -1,0 +1,20 @@
+# Core Computer Vision & Face Detection
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+
+# Live Reverse Image Search & Web APIs
+google-search-results>=2.4.2
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Blockchain & Web3
+web3>=6.15.0
+eth-account>=0.11.0
+pycryptodome>=3.20.0
+
+# CLI & Utilities
+rich>=13.7.0
+python-dotenv>=1.0.1
+pydantic>=2.6.0
+pytest>=8.0.0
