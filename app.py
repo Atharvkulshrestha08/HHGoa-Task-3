@@ -124,6 +124,7 @@ async def run_full_pipeline(
     file: Optional[UploadFile] = File(None),
     sample_name: Optional[str] = Form(None),
     image_base64: Optional[str] = Form(None),
+    search_hint: Optional[str] = Form(None),
     network: str = Form("sepolia"),
     force_local: bool = Form(False),
 ):
@@ -171,7 +172,9 @@ async def run_full_pipeline(
 
         # Step 2: Live Reverse Image Search
         search_engine = ReverseImageSearchEngine(api_key=config.get("SERPAPI_API_KEY"))
-        matches = search_engine.search(face_result.cropped_face_path, prefer_social=True)
+        matches = search_engine.search(
+            face_result.cropped_face_path, search_hint=search_hint, prefer_social=True
+        )
         best_match = matches[0] if matches else SearchMatch(
             url="https://x.com/search?q=verified_face_record",
             title="Live Web Visual Match",

@@ -243,6 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
     tamperLab.classList.add('hidden');
     downloadBar.classList.add('hidden');
 
+    const searchHintVal = document.getElementById('searchHintInput')?.value?.trim() || '';
+
     const formData = new FormData();
     if (currentFile) {
       formData.append('file', currentFile);
@@ -250,6 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('sample_name', currentSample);
     } else if (currentBase64) {
       formData.append('image_base64', currentBase64);
+    }
+    if (searchHintVal) {
+      formData.append('search_hint', searchHintVal);
     }
     formData.append('network', selectedNetwork);
     formData.append('force_local', selectedNetwork === 'local');

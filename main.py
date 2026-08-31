@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Face ID + Blockchain Verification Pipeline
+Face ID + Blockchain Verification Studio
 HH Goa 2026 Shortlisting Task 3
 
 Orchestrates:
@@ -9,6 +9,7 @@ Orchestrates:
 3. Cryptographic Keccak-256 Fingerprinting
 4. Blockchain Notarization (Sepolia Testnet / Local EVM Ledger)
 5. On-Chain Re-verification & Audit Proof
+6. Native Windows Desktop GUI & Web Dashboard
 """
 
 import sys
@@ -56,6 +57,7 @@ def print_banner():
 
 def run_pipeline(
     image_path: str,
+    search_hint: str = None,
     prefer_social: bool = True,
     force_local_chain: bool = False,
     network: str = "sepolia",
@@ -96,7 +98,9 @@ def run_pipeline(
     console.print("\n[bold yellow]>>> STEP 2: Live Web & Social Media Reverse Image Search[/bold yellow]")
     with console.status("[cyan]Executing live visual query across web & social media indexers...[/cyan]", spinner="dots"):
         search_engine = ReverseImageSearchEngine(api_key=cfg.get("SERPAPI_API_KEY"))
-        matches = search_engine.search(face_result.cropped_face_path, prefer_social=prefer_social)
+        matches = search_engine.search(
+            face_result.cropped_face_path, search_hint=search_hint, prefer_social=prefer_social
+        )
 
     if not matches:
         console.print("[bold red]No matching web or social media posts found.[/bold red]")
@@ -239,7 +243,22 @@ def run_pipeline(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Face ID + Blockchain Verification Pipeline (HH Goa 2026 Task 3)"
+        description="Face ID + Blockchain Verification Studio (HH Goa 2026 Task 3)"
+    )
+    parser.add_argument(
+        "--gui",
+        action="store_true",
+        help="Launch the Native Windows Desktop Application GUI (Default)",
+    )
+    parser.add_argument(
+        "--cli",
+        action="store_true",
+        help="Run in terminal CLI mode instead of Desktop GUI",
+    )
+    parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Launch the Web Studio Dashboard (http://localhost:8000)",
     )
     parser.add_argument(
         "--image",
@@ -247,6 +266,12 @@ def main():
         type=str,
         default="assets/sample_face.jpg",
         help="Path to input photo containing a face (default: assets/sample_face.jpg)",
+    )
+    parser.add_argument(
+        "--hint",
+        type=str,
+        default=None,
+        help="Optional person name / query hint for search (e.g. 'Rakhi Sawant')",
     )
     parser.add_argument(
         "--network",
@@ -262,11 +287,6 @@ def main():
         help="Force use of local cryptographic EVM audit ledger",
     )
     parser.add_argument(
-        "--web",
-        action="store_true",
-        help="Launch the interactive Web UI/UX Studio Dashboard (http://localhost:8000)",
-    )
-    parser.add_argument(
         "--output",
         "-o",
         type=str,
@@ -276,20 +296,41 @@ def main():
 
     args = parser.parse_args()
 
+    # Web Mode
     if args.web:
         import uvicorn
-        console.print("[bold cyan]🚀 Launching Face ID & Blockchain Verification Studio UI...[/bold cyan]")
+        console.print("[bold cyan]🚀 Launching Web UI Dashboard...[/bold cyan]")
         console.print("[bold green]👉 Open in your browser: http://127.0.0.1:8000[/bold green]\n")
         uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=False)
         return
 
-    run_pipeline(
-        image_path=args.image,
-        prefer_social=True,
-        force_local_chain=args.local_chain or (args.network == "local"),
-        network=args.network,
-        output_dir=args.output,
-    )
+    # CLI Mode
+    if args.cli:
+        run_pipeline(
+            image_path=args.image,
+            search_hint=args.hint,
+            prefer_social=True,
+            force_local_chain=args.local_chain or (args.network == "local"),
+            network=args.network,
+            output_dir=args.output,
+        )
+        return
+
+    # Default: Native Windows Desktop GUI
+    try:
+        from gui_app import FaceIDBlockchainApp
+        app = FaceIDBlockchainApp()
+        app.mainloop()
+    except Exception as e:
+        console.print(f"[bold yellow]GUI Launch notice: {e}. Falling back to CLI mode.[/bold yellow]")
+        run_pipeline(
+            image_path=args.image,
+            search_hint=args.hint,
+            prefer_social=True,
+            force_local_chain=args.local_chain or (args.network == "local"),
+            network=args.network,
+            output_dir=args.output,
+        )
 
 
 if __name__ == "__main__":
