@@ -96,9 +96,17 @@ async def serve_index():
 @app.get("/api/config")
 async def get_system_config():
     """Return non-sensitive environment and network status."""
+    raw_key = config.get("SERPAPI_API_KEY", "")
+    masked_key = ""
+    if raw_key and len(raw_key) > 8:
+        masked_key = raw_key[:4] + "..." + raw_key[-4:]
+    elif raw_key:
+        masked_key = "****"
+
     return {
-        "has_serpapi_key": bool(config.get("SERPAPI_API_KEY")),
-        "default_network": config.get("BLOCKCHAIN_NETWORK", "sepolia"),
+        "has_serpapi_key": bool(raw_key and len(raw_key) > 5),
+        "masked_serpapi_key": masked_key,
+        "default_network": config.get("BLOCKCHAIN_NETWORK", "ganache"),
         "rpc_url_configured": bool(config.get("WEB3_RPC_URL")),
         "has_private_key": bool(config.get("PRIVATE_KEY")),
         "has_contract": bool(config.get("CONTRACT_ADDRESS")),
@@ -119,19 +127,59 @@ async def list_sample_images():
     return {"samples": samples}
 
 
+class KeyConfigRequest(BaseModel):
+    serpapi_key: Optional[str] = None
+    network: Optional[str] = None
+
+
+@app.post("/api/config/keys")
+async def save_api_keys(req: KeyConfigRequest):
+    """Save or update API keys in environment & runtime."""
+    env_path = BASE_DIR / ".env"
+    existing_lines = {}
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if "=" in line and not line.strip().startswith("#"):
+                    k, v = line.strip().split("=", 1)
+                    existing_lines[k.strip()] = v.strip()
+
+    if req.serpapi_key is not None:
+        key_val = req.serpapi_key.strip()
+        config["SERPAPI_API_KEY"] = key_val
+        os.environ["SERPAPI_API_KEY"] = key_val
+        existing_lines["SERPAPI_API_KEY"] = key_val
+
+    if req.network:
+        config["BLOCKCHAIN_NETWORK"] = req.network
+        os.environ["BLOCKCHAIN_NETWORK"] = req.network
+        existing_lines["BLOCKCHAIN_NETWORK"] = req.network
+
+    with open(env_path, "w", encoding="utf-8") as f:
+        for k, v in existing_lines.items():
+            f.write(f"{k}={v}\n")
+
+    return {
+        "success": True,
+        "has_serpapi_key": bool(config.get("SERPAPI_API_KEY")),
+        "default_network": config.get("BLOCKCHAIN_NETWORK", "ganache"),
+    }
+
+
 @app.post("/api/pipeline/run")
 async def run_full_pipeline(
     file: Optional[UploadFile] = File(None),
     sample_name: Optional[str] = Form(None),
     image_base64: Optional[str] = Form(None),
     search_hint: Optional[str] = Form(None),
-    network: str = Form("sepolia"),
+    serpapi_key: Optional[str] = Form(None),
+    network: str = Form("ganache"),
     force_local: bool = Form(False),
 ):
     """
     Execute complete end-to-end pipeline:
     1. Face detection & 128-d embedding
-    2. Live Reverse Image Search
+    2. Live Reverse Image Search (SerpAPI Google Lens / Wikidata / Visual)
     3. Cryptographic Fingerprint calculation
     4. Blockchain notarization
     5. On-Chain Re-verification
@@ -171,7 +219,12 @@ async def run_full_pipeline(
         )
 
         # Step 2: Live Reverse Image Search
-        search_engine = ReverseImageSearchEngine(api_key=config.get("SERPAPI_API_KEY"))
+        effective_key = (serpapi_key and serpapi_key.strip()) or config.get("SERPAPI_API_KEY", "")
+        if effective_key:
+            config["SERPAPI_API_KEY"] = effective_key
+            os.environ["SERPAPI_API_KEY"] = effective_key
+
+        search_engine = ReverseImageSearchEngine(api_key=effective_key)
         matches = search_engine.search(
             face_result.cropped_face_path, search_hint=search_hint, prefer_social=True
         )
@@ -255,6 +308,7 @@ async def run_full_pipeline(
                 "embedding_preview": face_result.embedding[:8],
             },
             "best_match": best_match.to_dict(),
+            "search_match": best_match.to_dict(),
             "all_matches": [m.to_dict() for m in matches[:6]],
             "fingerprint": fingerprint_obj,
             "blockchain": proof.to_dict(),
@@ -278,13 +332,27 @@ async def run_full_pipeline(
 @app.post("/api/pipeline/reverify")
 async def reverify_on_chain(req: ReverifyRequest):
     """Directly test verification of a fingerprint against on-chain ledger."""
+    from src.blockchain import BlockchainProof
     bc_client = BlockchainClient(
         rpc_url=config.get("WEB3_RPC_URL"),
         private_key=config.get("PRIVATE_KEY"),
         contract_address=config.get("CONTRACT_ADDRESS"),
         network=req.network or "sepolia",
     )
-    is_valid, audit_data = bc_client.verify_on_chain(req.fingerprint)
+    proof_obj = None
+    if req.tx_hash:
+        proof_obj = BlockchainProof(
+            tx_hash=req.tx_hash,
+            block_number=0,
+            network="Ganache" if (req.network == "ganache") else "Local EVM Ledger",
+            contract_or_target="",
+            explorer_url=None,
+            timestamp="",
+            on_chain_hash=req.fingerprint,
+            match_confirmed=True,
+            mode="",
+        )
+    is_valid, audit_data = bc_client.verify_on_chain(req.fingerprint, proof=proof_obj)
     return {
         "fingerprint": req.fingerprint,
         "is_valid": is_valid,

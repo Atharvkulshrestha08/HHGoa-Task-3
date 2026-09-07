@@ -47,7 +47,7 @@ class FaceIDBlockchainApp(ctk.CTk):
         self.title("Face ID + Blockchain Verification Studio | HH Goa 2026")
         self.geometry("1340x880")
         self.minsize(1100, 750)
-        self.configure(fg_color="#080c15")
+        self.configure(fg_color="#041f10")
 
         # Core Engines
         self.config_data = load_config()
@@ -75,7 +75,7 @@ class FaceIDBlockchainApp(ctk.CTk):
         # -------------------------------------------------------------
         # 1. Header Bar
         # -------------------------------------------------------------
-        self.header_frame = ctk.CTkFrame(self, fg_color="#0e1526", corner_radius=0, height=70)
+        self.header_frame = ctk.CTkFrame(self, fg_color="#072e18", corner_radius=0, height=70)
         self.header_frame.pack(fill="x", side="top", padx=0, pady=0)
         self.header_frame.pack_propagate(False)
 
@@ -84,15 +84,15 @@ class FaceIDBlockchainApp(ctk.CTk):
             self.header_frame,
             text="🛡️ FaceVerif.chain",
             font=ctk.CTkFont(family="Segoe UI", size=22, weight="bold"),
-            text_color="#06b6d4",
+            text_color="#fee101",
         )
         self.title_label.pack(side="left", padx=25, pady=10)
 
         self.subtitle_label = ctk.CTkLabel(
             self.header_frame,
-            text="HH Goa 2026 Shortlisting • Task 3 Desktop Studio",
+            text="HH Goa 2026 Shortlisting • Task 3 Desktop Studio (2:47 pm Studio)",
             font=ctk.CTkFont(family="Segoe UI", size=12),
-            text_color="#94a3b8",
+            text_color="#fffbe8",
         )
         self.subtitle_label.pack(side="left", padx=5, pady=15)
 
@@ -132,14 +132,14 @@ class FaceIDBlockchainApp(ctk.CTk):
         # =============================================================
         # COLUMN 1: Face ID & Biometric Studio
         # =============================================================
-        self.col1_frame = ctk.CTkFrame(self.content_frame, fg_color="#0f172a", corner_radius=14)
+        self.col1_frame = ctk.CTkFrame(self.content_frame, fg_color="#072e18", corner_radius=14)
         self.col1_frame.grid(row=0, column=0, sticky="nsew", padx=8, pady=5)
 
         self.c1_header = ctk.CTkLabel(
             self.col1_frame,
             text="01. Face Identification",
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color="#38bdf8",
+            text_color="#fee101",
         )
         self.c1_header.pack(anchor="w", padx=18, pady=(15, 5))
 
@@ -204,7 +204,7 @@ class FaceIDBlockchainApp(ctk.CTk):
 
         self.hint_entry = ctk.CTkEntry(
             self.col1_frame,
-            placeholder_text="e.g. Rakhi Sawant, Elon Musk, or auto-detect from photo",
+            placeholder_text="Optional: Name / handle (leave blank for pure visual search)",
             fg_color="#020617",
             border_color="#334155",
         )
@@ -243,8 +243,8 @@ class FaceIDBlockchainApp(ctk.CTk):
             self.col1_frame,
             text="🚀 RUN END-TO-END VERIFICATION",
             font=ctk.CTkFont(size=13, weight="bold"),
-            fg_color="#0284c7",
-            hover_color="#0369a1",
+            fg_color="#ff0080",
+            hover_color="#e60073",
             height=42,
             command=self._start_pipeline_thread,
         )
@@ -253,14 +253,14 @@ class FaceIDBlockchainApp(ctk.CTk):
         # =============================================================
         # COLUMN 2: Reverse Social Search & Fingerprint
         # =============================================================
-        self.col2_frame = ctk.CTkFrame(self.content_frame, fg_color="#0f172a", corner_radius=14)
+        self.col2_frame = ctk.CTkFrame(self.content_frame, fg_color="#072e18", corner_radius=14)
         self.col2_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=5)
 
         self.c2_header = ctk.CTkLabel(
             self.col2_frame,
             text="02. Social Discovery & Crypto",
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color="#38bdf8",
+            text_color="#fee101",
         )
         self.c2_header.pack(anchor="w", padx=18, pady=(15, 5))
 
@@ -343,14 +343,14 @@ class FaceIDBlockchainApp(ctk.CTk):
         # =============================================================
         # COLUMN 3: Blockchain Notarization & Tamper Lab
         # =============================================================
-        self.col3_frame = ctk.CTkFrame(self.content_frame, fg_color="#0f172a", corner_radius=14)
+        self.col3_frame = ctk.CTkFrame(self.content_frame, fg_color="#072e18", corner_radius=14)
         self.col3_frame.grid(row=0, column=2, sticky="nsew", padx=8, pady=5)
 
         self.c3_header = ctk.CTkLabel(
             self.col3_frame,
             text="03. Blockchain Proof & Audit",
             font=ctk.CTkFont(size=16, weight="bold"),
-            text_color="#38bdf8",
+            text_color="#fee101",
         )
         self.c3_header.pack(anchor="w", padx=18, pady=(15, 5))
 

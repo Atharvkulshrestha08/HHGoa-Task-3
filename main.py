@@ -60,8 +60,9 @@ def run_pipeline(
     search_hint: str = None,
     prefer_social: bool = True,
     force_local_chain: bool = False,
-    network: str = "sepolia",
+    network: str = "ganache",
     output_dir: str = "output",
+    serpapi_key: str = None,
 ):
     print_banner()
 
@@ -97,7 +98,8 @@ def run_pipeline(
     # -------------------------------------------------------------
     console.print("\n[bold yellow]>>> STEP 2: Live Web & Social Media Reverse Image Search[/bold yellow]")
     with console.status("[cyan]Executing live visual query across web & social media indexers...[/cyan]", spinner="dots"):
-        search_engine = ReverseImageSearchEngine(api_key=cfg.get("SERPAPI_API_KEY"))
+        key_to_use = (serpapi_key and serpapi_key.strip()) or cfg.get("SERPAPI_API_KEY")
+        search_engine = ReverseImageSearchEngine(api_key=key_to_use)
         matches = search_engine.search(
             face_result.cropped_face_path, search_hint=search_hint, prefer_social=prefer_social
         )
@@ -299,38 +301,30 @@ def main():
     # Web Mode
     if args.web:
         import uvicorn
-        console.print("[bold cyan]🚀 Launching Web UI Dashboard...[/bold cyan]")
+        console.print("[bold cyan]🚀 Launching Web UI Studio Dashboard...[/bold cyan]")
         console.print("[bold green]👉 Open in your browser: http://127.0.0.1:8000[/bold green]\n")
         uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=False)
         return
 
-    # CLI Mode
-    if args.cli:
-        run_pipeline(
-            image_path=args.image,
-            search_hint=args.hint,
-            prefer_social=True,
-            force_local_chain=args.local_chain or (args.network == "local"),
-            network=args.network,
-            output_dir=args.output,
-        )
-        return
+    # Explicit GUI Mode
+    if args.gui:
+        try:
+            from gui_app import FaceIDBlockchainApp
+            app = FaceIDBlockchainApp()
+            app.mainloop()
+            return
+        except Exception as e:
+            console.print(f"[bold yellow]GUI Launch notice: {e}. Falling back to CLI mode.[/bold yellow]")
 
-    # Default: Native Windows Desktop GUI
-    try:
-        from gui_app import FaceIDBlockchainApp
-        app = FaceIDBlockchainApp()
-        app.mainloop()
-    except Exception as e:
-        console.print(f"[bold yellow]GUI Launch notice: {e}. Falling back to CLI mode.[/bold yellow]")
-        run_pipeline(
-            image_path=args.image,
-            search_hint=args.hint,
-            prefer_social=True,
-            force_local_chain=args.local_chain or (args.network == "local"),
-            network=args.network,
-            output_dir=args.output,
-        )
+    # Default / CLI Mode: Execute pipeline
+    run_pipeline(
+        image_path=args.image,
+        search_hint=args.hint,
+        prefer_social=True,
+        force_local_chain=args.local_chain or (args.network == "local"),
+        network=args.network,
+        output_dir=args.output,
+    )
 
 
 if __name__ == "__main__":

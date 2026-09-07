@@ -164,10 +164,22 @@ class BlockchainClient:
         self._init_web3()
 
     def _init_web3(self):
-        """Initialize Web3 connection if valid RPC provided."""
+        """Initialize Web3 connection (checking Ganache local RPC first if selected, then Sepolia)."""
+        # 1. Check if Ganache is running on local ports
+        self.ganache_w3 = None
+        for g_url in ["http://127.0.0.1:7545", "http://127.0.0.1:8545"]:
+            try:
+                test_w3 = Web3(Web3.HTTPProvider(g_url, request_kwargs={"timeout": 1}))
+                if test_w3.is_connected() and len(test_w3.eth.accounts) > 0:
+                    self.ganache_w3 = test_w3
+                    break
+            except Exception:
+                pass
+
+        # 2. Check Sepolia or configured RPC
         try:
-            if self.rpc_url:
-                self.w3 = Web3(Web3.HTTPProvider(self.rpc_url, request_kwargs={"timeout": 10}))
+            if self.rpc_url and "ethereum" in self.rpc_url or "sepolia" in self.rpc_url:
+                self.w3 = Web3(Web3.HTTPProvider(self.rpc_url, request_kwargs={"timeout": 5}))
                 if self.private_key and len(self.private_key.strip()) >= 64:
                     pk = self.private_key.strip()
                     if not pk.startswith("0x"):
@@ -197,19 +209,65 @@ class BlockchainClient:
     ) -> BlockchainProof:
         """
         Record fingerprint on blockchain:
-        1. If funded Sepolia account available: broadcast live EVM transaction / smart contract.
-        2. Otherwise: record into local cryptographic blockchain ledger.
+        1. If Ganache local blockchain running: broadcast local Ethereum tx.
+        2. If funded Sepolia account available: broadcast live EVM transaction / smart contract.
+        3. Otherwise: record into local cryptographic EVM blockchain ledger.
         """
-        # If testnet parameters configured and connected
+        # Check Ganache first if not forcing purely simulated local ledger
+        if not force_local and self.ganache_w3 and self.ganache_w3.is_connected():
+            try:
+                return self._upload_ganache(fingerprint_hex, post_url, metadata)
+            except Exception:
+                pass
+
+        # If Sepolia testnet parameters configured and connected
         if not force_local and self.w3 and self.w3.is_connected() and self.account:
             try:
                 return self._upload_evm_testnet(fingerprint_hex, post_url, metadata)
             except Exception as e:
-                # If transaction fails (e.g. out of gas or network error), fallback to local ledger
                 pass
 
-        # Local chain fallback
+        # Local cryptographic ledger fallback
         return self.local_ledger.record(fingerprint_hex, post_url, metadata)
+
+    def _upload_ganache(
+        self, fingerprint_hex: str, post_url: str, metadata: Dict[str, Any]
+    ) -> BlockchainProof:
+        """Broadcast live transaction on local Ganache personal blockchain (http://127.0.0.1:7545)."""
+        w3 = self.ganache_w3
+        account = w3.eth.accounts[0]
+        nonce = w3.eth.get_transaction_count(account)
+        gas_price = w3.eth.gas_price
+
+        # Build transaction embedding the hash into the data payload
+        tx = {
+            "to": account,
+            "from": account,
+            "value": 0,
+            "gas": 2000000,
+            "gasPrice": gas_price,
+            "nonce": nonce,
+            "data": Web3.to_hex(text=fingerprint_hex),
+        }
+        tx_hash_bytes = w3.eth.send_transaction(tx)
+        tx_hash = tx_hash_bytes.hex()
+        receipt = w3.eth.wait_for_transaction_receipt(tx_hash_bytes, timeout=10)
+        block_number = receipt.get("blockNumber", w3.eth.block_number)
+
+        # Also save to local ledger for explorer history
+        proof = self.local_ledger.record(fingerprint_hex, post_url, {**metadata, "ganache_tx": tx_hash, "ganache_block": block_number})
+
+        return BlockchainProof(
+            tx_hash=tx_hash,
+            block_number=block_number,
+            network="Ganache Local Ethereum Blockchain (Port 7545)",
+            contract_or_target=account,
+            explorer_url=f"http://127.0.0.1:7545/tx/{tx_hash}",
+            timestamp=time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
+            on_chain_hash=fingerprint_hex,
+            match_confirmed=True,
+            mode="Ganache Personal Ethereum Blockchain (EVM CallData)",
+        )
 
     def _upload_evm_testnet(
         self, fingerprint_hex: str, post_url: str, metadata: Dict[str, Any]
@@ -281,8 +339,25 @@ class BlockchainClient:
         """
         Verify that a fingerprint is recorded on-chain and retrieve notarized proof.
         """
+        # Check Ganache if tx_hash provided and Ganache is connected
+        if self.ganache_w3 and proof and ("Ganache" in getattr(proof, "network", "") or proof.tx_hash):
+            try:
+                tx = self.ganache_w3.eth.get_transaction(proof.tx_hash)
+                input_data = tx.get("input", b"")
+                decoded_text = Web3.to_text(input_data)
+                is_valid = decoded_text.lower().strip() == fingerprint_hex.lower().strip()
+                return is_valid, {
+                    "verified_on_chain": is_valid,
+                    "network": "Ganache Local Ethereum Blockchain (Port 7545)",
+                    "on_chain_fingerprint": decoded_text,
+                    "tx_hash": proof.tx_hash,
+                    "block_number": tx.get("blockNumber"),
+                }
+            except Exception:
+                pass
+
         # Check Local Ledger first if local proof
-        if proof and "Local" in proof.network:
+        if proof and "Local" in getattr(proof, "network", ""):
             is_valid, record = self.local_ledger.verify(fingerprint_hex, proof.tx_hash)
             return is_valid, {
                 "verified_on_chain": is_valid,

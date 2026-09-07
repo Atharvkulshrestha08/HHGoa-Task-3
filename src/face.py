@@ -63,9 +63,19 @@ class FacePipeline:
         self._init_models()
 
     def _download_file(self, url: str, destination: Path) -> bool:
-        """Download model file if not present."""
+        """Download model file if not present, reusing central models dir if possible."""
         if destination.exists() and destination.stat().st_size > 10000:
             return True
+        # Check if central models directory already has it
+        central_file = MODELS_DIR / destination.name
+        if central_file.exists() and central_file.stat().st_size > 10000:
+            try:
+                import shutil
+                if central_file.resolve() != destination.resolve():
+                    shutil.copy2(central_file, destination)
+                return True
+            except Exception:
+                pass
         try:
             headers = {'User-Agent': 'Mozilla/5.0'}
             req = urllib.request.Request(url, headers=headers)
